@@ -1,0 +1,302 @@
+<?php
+
+// namespace App\Http\Controllers;
+
+// use Illuminate\Http\Request;
+// use DB;
+
+// class DashboardController extends Controller
+// {
+//     public function __invoke(Request $request)
+//     {
+//         $año=date('Y');
+//         $compra=DB::table('compra as nc')
+//         ->select(DB::raw('MONTH(nc.fecha) as mes'),
+//         DB::raw('YEAR(nc.fecha) as año'),
+//         DB::raw('SUM(nc.total) as total'))
+//         ->whereYear('nc.fecha', $año)
+//         ->where('nc.estado','!=','Anulado')
+//         ->groupBy(DB::raw('MONTH(nc.fecha)'),DB::raw('YEAR(nc.fecha)'))
+//         //->orderBy('SUM(nc.total)', 'limit 5')
+//         ->get();
+
+//         $venta=DB::table('venta as nv')
+//         ->join('tienda as tn','nv.id_tienda','=','tn.id')
+//         ->select(DB::raw('YEAR(nv.fecha) as año'),
+//         DB::raw('SUM(nv.total) as total'),
+//         'nv.id_tienda','tn.nombre as tienda')
+//         ->whereYear('nv.fecha', $año)
+//         ->where('nv.estado','!=','Anulado')
+//         ->groupBy(DB::raw('YEAR(nv.fecha)'),'nv.id_tienda')
+//         ->get();
+
+//         $venta_directa=DB::table('venta as nv')
+//         ->join('tienda as tn','nv.id_tienda','=','tn.id')
+//         ->select(DB::raw('YEAR(nv.fecha) as año'),
+//         DB::raw('SUM(nv.total) as total'),
+//         'nv.id_tienda','tn.nombre as tienda')
+//         ->whereYear('nv.fecha', $año)
+//         ->where('nv.tipo_venta','=','Venta Directa')
+//         ->where('nv.estado','!=','Anulado')
+//         ->groupBy(DB::raw('YEAR(nv.fecha)'),'nv.id_tienda')
+//         ->get();
+
+//         $venta_servicio=DB::table('venta as nv')
+//         ->join('tienda as tn','nv.id_tienda','=','tn.id')
+//         ->select(DB::raw('YEAR(nv.fecha) as año'),
+//         DB::raw('SUM(nv.total) as total'),
+//         'nv.id_tienda','tn.nombre as tienda')
+//         ->whereYear('nv.fecha', $año)
+//         ->where('nv.tipo_venta','=','Venta Servicio')
+//         ->where('nv.estado','!=','Anulado')
+//         ->groupBy(DB::raw('YEAR(nv.fecha)'),'nv.id_tienda')
+//         ->get();
+
+//         return ['compra'=>$compra,'venta'=>$venta, 'venta_directa'=>$venta_directa, 'venta_servicio'=>$venta_servicio,'año'=>$año];
+//     }
+
+//     // public function __invoke2(Request $request)
+//     // {
+
+
+//     //     $venta=DB::select("SELECT c.nombre_cliente cliente, SUM(v.total) total, '2022' año FROM cliente C, venta v 
+//     //     WHERE v.id_cliente=c.id AND c.estado!=0 AND v.estado!='Anulado'  GROUP BY c.nombre_cliente  ORDER BY SUM(v.total) DESC LIMIT 5");
+
+//     //     $compra=DB::select("SELECT p.nombre as proveedor, SUM(c.total) total FROM proveedor p, compra c
+//     //     WHERE c.id_proveedor=p.id AND p.estado!=0 AND c.estado!='Anulado' GROUP BY p.nombre ORDER BY SUM(c.total) DESC  LIMIT 5 ");
+
+//     //     //dd($compra,$venta);
+
+//     //     return ['compra'=>$compra,'venta'=>$venta,'año'=>2022];
+//     // }
+
+//     // public function __invoke3(Request $request)  
+//     // {
+//     //     $venta=DB::table('venta as v')
+//     //     ->join('cliente as c','v.id_cliente','=','c.id')
+//     //     ->select('c.nombre_cliente as cliente',
+//     //     DB::raw('SUM(v.total) as total'),'"2022" as año')
+//     //     ->where('c.estado','!=',0)
+//     //     ->where('v.estado','!=','Anulado')
+//     //     ->groupBy('c.nombre_cliente')
+//     //     ->orderBy('SUM(V.total)')
+//     //     ->get();
+
+//     //     $compra=DB::table('proveedor as p')
+//     //     ->join('compra as c','c.id_proveedor','=','p.id')
+//     //     ->select('p.nombre as proveedor',
+//     //     DB::raw('SUM(c.total) as total'))
+//     //     ->where('p.estado','!=',0)
+//     //     ->where('c.estado','!=','Anulado')
+//     //     ->groupBy('p.nombre')
+//     //     ->orderBy('SUM(c.total)')
+//     //     ->get();
+
+//     //     return ['compra'=>$compra,'venta'=>$venta,'año'=>2022];
+//     // }
+// }
+
+
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use DB;
+
+class DashboardController extends Controller
+{
+    public function __invoke(Request $request)
+    {
+        $fecha_inicio = $request->fecha_inicio;
+        $fecha_fin = $request->fecha_fin;
+        $criterio = $request->criterio;
+
+        if($criterio==1){
+            $año=date('Y');
+            $compra=DB::table('compra as nc')
+            ->select(DB::raw('DATE_FORMAT(nc.fecha, "%d-%b-%Y")as fecha_literal'),
+            DB::raw('SUM(nc.total) as total'),'nc.fecha')
+            ->whereDate('nc.fecha',">=",$fecha_inicio)
+            ->whereDate('nc.fecha',"<=",$fecha_fin)
+            ->where('nc.estado','!=','Anulado')
+            ->whereYear('nc.fecha', $año)
+            ->groupBy(DB::raw('DAY(nc.fecha)'),DB::raw('YEAR(nc.fecha)'))
+            //->orderBy('SUM(nc.total)', 'limit 5')
+            ->get();
+
+            
+    
+            //'DATE_FORMAT(cust.cust_dob, "%d-%b-%Y")as fecha_literal'
+    
+            $venta=DB::table('venta as nv')
+            ->join('tienda as tn','nv.id_tienda','=','tn.id')
+            // ->select(DB::raw('DAY(nv.fecha) as Dia'),
+            ->select(DB::raw('DATE_FORMAT(nv.fecha, "%d-%b-%Y")as fecha_literal, MONTH(nv.fecha) as mes'),
+            DB::raw('SUM(nv.total) as total'),
+            'nv.id_tienda','tn.nombre as tienda')
+            ->whereDate('nv.fecha',">=",$fecha_inicio)
+            ->whereDate('nv.fecha',"<=",$fecha_fin)
+            ->whereYear('nv.fecha', $año)
+            ->where('nv.estado','Cobrado')
+            ->groupBy(DB::raw('DAY(nv.fecha)'),'nv.id_tienda')
+            ->get();
+            // dd($venta);
+    
+            // $venta_directa=DB::table('venta as nv')
+            // ->join('tienda as tn','nv.id_tienda','=','tn.id')
+            // ->select(DB::raw('YEAR(nv.fecha) as año'),
+            // DB::raw('SUM(nv.total) as total'),
+            // 'nv.id_tienda','tn.nombre as tienda')
+            // ->whereYear('nv.fecha', $año)
+            // ->where('nv.tipo_venta','=','Venta Directa')
+            // ->where('nv.estado','!=','Anulado')
+            // ->groupBy(DB::raw('YEAR(nv.fecha)'),'nv.id_tienda')
+            // ->get();
+    
+            // $venta_servicio=DB::table('venta as nv')
+            // ->join('tienda as tn','nv.id_tienda','=','tn.id')
+            // ->select(DB::raw('YEAR(nv.fecha) as año'),
+            // DB::raw('SUM(nv.total) as total'),
+            // 'nv.id_tienda','tn.nombre as tienda')
+            // ->whereYear('nv.fecha', $año)
+            // ->where('nv.tipo_venta','=','Venta Servicio')
+            // ->where('nv.estado','!=','Anulado')
+            // ->groupBy(DB::raw('YEAR(nv.fecha)'),'nv.id_tienda')
+            // ->get();
+        }else{
+            $año=date('Y');
+            $compra=DB::table('compra as nc')
+            ->select(DB::raw('MONTHNAME(nc.fecha) as mes, DAY(nc.fecha) as dia'),
+            DB::raw('DAY(nc.fecha) as año'), DB::raw('DATE_FORMAT(nc.fecha, "%d-%b-%Y")as fecha_literal'),
+            DB::raw('SUM(nc.total) as total'),'nc.fecha')
+            ->whereDate('nc.fecha',">=",$fecha_inicio)
+            ->whereDate('nc.fecha',"<=",$fecha_fin)
+            ->where('nc.estado','!=','Anulado')
+            ->whereYear('nc.fecha', $año)
+            ->groupBy(DB::raw('MONTH(nc.fecha)'),DB::raw('YEAR(nc.fecha)'))
+            //->orderBy('SUM(nc.total)', 'limit 5')
+            ->get();
+    
+            //'DATE_FORMAT(cust.cust_dob, "%d-%b-%Y")as fecha_literal'
+    
+            $venta=DB::table('venta as nv')
+            ->join('tienda as tn','nv.id_tienda','=','tn.id')
+            // ->select(DB::raw('DAY(nv.fecha) as Dia'),
+            ->select(DB::raw('DATE_FORMAT(nv.fecha, "%d-%b-%Y")as fecha_literal'),
+            DB::raw('SUM(nv.total) as total'), DB::raw('MONTHNAME(nv.fecha) as mes'),
+            'nv.id_tienda','tn.nombre as tienda')
+            ->whereDate('nv.fecha',">=",$fecha_inicio)
+            ->whereDate('nv.fecha',"<=",$fecha_fin)
+            ->whereYear('nv.fecha', $año)
+            ->where('nv.estado','Cobrado')
+          
+            ->groupBy(DB::raw('MONTH(nv.fecha)'),'nv.id_tienda')
+            ->get();
+            
+
+            // dd($venta);
+    
+            // $venta_directa=DB::table('venta as nv')
+            // ->join('tienda as tn','nv.id_tienda','=','tn.id')
+            // ->select(DB::raw('YEAR(nv.fecha) as año'),
+            // DB::raw('SUM(nv.total) as total'),
+            // 'nv.id_tienda','tn.nombre as tienda')
+            // ->whereYear('nv.fecha', $año)
+            // ->where('nv.tipo_venta','=','Venta Directa')
+            // ->where('nv.estado','!=','Anulado')
+            // ->groupBy(DB::raw('YEAR(nv.fecha)'),'nv.id_tienda')
+            // ->get();
+    
+            // $venta_servicio=DB::table('venta as nv')
+            // ->join('tienda as tn','nv.id_tienda','=','tn.id')
+            // ->select(DB::raw('YEAR(nv.fecha) as año'),
+            // DB::raw('SUM(nv.total) as total'),
+            // 'nv.id_tienda','tn.nombre as tienda')
+            // ->whereYear('nv.fecha', $año)
+            // ->where('nv.tipo_venta','=','Venta Servicio')
+            // ->where('nv.estado','!=','Anulado')
+            // ->groupBy(DB::raw('YEAR(nv.fecha)'),'nv.id_tienda')
+            // ->get();
+        }
+
+        return ['compra'=>$compra,'venta'=>$venta,'año'=>$año];
+    }
+
+    public function reportePorMes(Request $request){
+        $año = date('Y');
+        $mes=$request->mes;
+        $año=date('Y');
+
+        $compra=DB::table('compra as nc')
+        ->select(DB::raw('MONTHNAME(nc.fecha) as mes, DAY(nc.fecha) as dia'),
+        DB::raw('DAY(nc.fecha) as año'), DB::raw('DATE_FORMAT(nc.fecha, "%d-%b-%Y")as fecha_literal'),
+        DB::raw('SUM(nc.total) as total'),'nc.fecha')
+        //->whereDate('nc.fecha',">=",$fecha_inicio)
+        //->whereDate('nc.fecha',"<=",$fecha_fin)
+        ->where('nc.estado','!=','Anulado')
+        ->whereYear('nc.fecha', $año)
+        ->whereMonth('nc.fecha', $mes)
+        ->groupBy(DB::raw('MONTH(nc.fecha)'),DB::raw('YEAR(nc.fecha)'))
+        //->orderBy('SUM(nc.total)', 'limit 5')
+        ->get();
+
+        //'DATE_FORMAT(cust.cust_dob, "%d-%b-%Y")as fecha_literal'
+
+        $venta=DB::table('venta as nv')
+        ->join('tienda as tn','nv.id_tienda','=','tn.id')
+        // ->select(DB::raw('DAY(nv.fecha) as Dia'),
+        ->select(DB::raw('DATE_FORMAT(nv.fecha, "%d-%b-%Y")as fecha_literal'),
+        DB::raw('SUM(nv.total) as total'), DB::raw('MONTHNAME(nv.fecha) as mes'),
+        'nv.id_tienda','tn.nombre as tienda')
+        //->whereDate('nv.fecha',">=",$fecha_inicio)
+        //->whereDate('nv.fecha',"<=",$fecha_fin)
+        ->whereYear('nv.fecha', $año)
+        ->whereMonth('nv.fecha', $mes)
+        ->where('nv.estado','!=','Anulado')
+        ->groupBy(DB::raw('MONTH(nv.fecha)'),'nv.id_tienda')
+        ->get();
+
+        //return ['compra'=>$compra,'venta'=>$venta,'año'=>$año];
+        return ['venta'=>$venta, 'compra'=>$compra];
+    }
+
+    // public function __invoke2(Request $request)
+    // {
+
+
+    //     $venta=DB::select("SELECT c.nombre_cliente cliente, SUM(v.total) total, '2022' año FROM cliente C, venta v 
+    //     WHERE v.id_cliente=c.id AND c.estado!=0 AND v.estado!='Anulado'  GROUP BY c.nombre_cliente  ORDER BY SUM(v.total) DESC LIMIT 5");
+
+    //     $compra=DB::select("SELECT p.nombre as proveedor, SUM(c.total) total FROM proveedor p, compra c
+    //     WHERE c.id_proveedor=p.id AND p.estado!=0 AND c.estado!='Anulado' GROUP BY p.nombre ORDER BY SUM(c.total) DESC  LIMIT 5 ");
+
+    //     //dd($compra,$venta);
+
+    //     return ['compra'=>$compra,'venta'=>$venta,'año'=>2022];
+    // }
+
+    // public function __invoke3(Request $request)  
+    // {
+    //     $venta=DB::table('venta as v')
+    //     ->join('cliente as c','v.id_cliente','=','c.id')
+    //     ->select('c.nombre_cliente as cliente',
+    //     DB::raw('SUM(v.total) as total'),'"2022" as año')
+    //     ->where('c.estado','!=',0)
+    //     ->where('v.estado','!=','Anulado')
+    //     ->groupBy('c.nombre_cliente')
+    //     ->orderBy('SUM(V.total)')
+    //     ->get();
+
+    //     $compra=DB::table('proveedor as p')
+    //     ->join('compra as c','c.id_proveedor','=','p.id')
+    //     ->select('p.nombre as proveedor',
+    //     DB::raw('SUM(c.total) as total'))
+    //     ->where('p.estado','!=',0)
+    //     ->where('c.estado','!=','Anulado')
+    //     ->groupBy('p.nombre')
+    //     ->orderBy('SUM(c.total)')
+    //     ->get();
+
+    //     return ['compra'=>$compra,'venta'=>$venta,'año'=>2022];
+    // }
+}

@@ -1,0 +1,11 @@
+DELIMITER $$
+--
+-- Procedimientos
+--
+CREATE PROCEDURE permisoUsuario (IN id_usuario INT, IN id_formulario INT)   begin
+	SELECT IF(EXISTS(select df.id_permiso_form, u.email from users u inner join 
+    usuario_permisos up on u.id=up.id_usuario inner join detalle_forms df on 
+    df.id=up.id_permiso where u.id=id_usuario and df.id_formulario=id_formulario), 1, 0) as form;
+end$$
+
+DELIMITER ;
