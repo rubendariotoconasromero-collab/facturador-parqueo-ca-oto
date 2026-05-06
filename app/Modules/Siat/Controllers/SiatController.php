@@ -146,16 +146,16 @@ class SiatController extends Controller
 	public function view(int $id, InvoiceModel $model)
 	{
 		$tpl 		= request()->get('tpl');
-		$opcion 	= empty(request()->get('opcion'))?request()->get('opcion'):0;
+		$opcion 	= request()->get('opcion', 0);
 		$invoice 	= Invoice::find($id);
 		if( !$invoice )
 			die('La factura no existe');
 		
 		$dompdf = $model->buildPdf($invoice, $tpl);
-		if($tpl=='rollo'){
+		if($tpl=='rollo' || $tpl == 'ticket-small'){
 			$nombreArchivo = 'factura.pdf';
 			// Obtiene la ubicación donde deseas guardar el PDF
-			$ubicacion = public_path('pdfs//' . $nombreArchivo);
+			$ubicacion = public_path('pdfs/' . $nombreArchivo);
 			// Guarda el archivo PDF en la ubicación especificada
 			file_put_contents($ubicacion, $dompdf->output());
 			//$dompdf->save($ubicacion);
@@ -172,13 +172,13 @@ class SiatController extends Controller
 		if($opcion==1){//imprimir
 			return response()->file($ubicacion, [
 				'Content-Disposition' => 'inline; filename=' . $nombreArchivo,
-			])->send();
+			]);
 		}else{
 			if($opcion==0){
 				return response()->stream(function() use($dompdf)
 				{
 					$dompdf->stream('invoice', ['Attachment' => 0]);
-				}, 200, ['Content-Type' => 'application/pdf'])->sendContent();
+				}, 200, ['Content-Type' => 'application/pdf']);
 			}
 		}
 		

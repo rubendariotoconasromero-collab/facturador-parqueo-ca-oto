@@ -140,7 +140,7 @@ class ApiInvoicesController extends Controller
 
 				$b64 = base64_encode($json);
 				// return response(['code' => 200, 'data' => $result])->header('Content-Type', 'application/json');
-				return response(['code' => 200, 'data' => $b64])->header('Content-Type', 'application/json');
+				return response(['code' => 200, 'data' => $b64, 'id' => $invoice->id])->header('Content-Type', 'application/json');
 				//fin
 				//return response(['code' => 200, 'data' => $result])->header('Content-Type', 'application/json');
 			}
@@ -185,7 +185,7 @@ class ApiInvoicesController extends Controller
 
 				$b64 = base64_encode($json);
 				// return response(['data' => new ResourceInvoice($invoice)])->header('Content-Type', 'application/json');
-				return response(['data' => $b64, 200])->header('Content-Type', 'application/json');
+				return response(['code' => 200, 'data' => $b64, 'id' => $invoice->id])->header('Content-Type', 'application/json');
 				//fin
 				//return response(['data' => new ResourceInvoice($invoice)])->header('Content-Type', 'application/json');
 			}

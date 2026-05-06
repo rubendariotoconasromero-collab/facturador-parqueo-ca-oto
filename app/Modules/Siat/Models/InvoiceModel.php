@@ -503,7 +503,7 @@ class InvoiceModel extends SiatModel
 			//dd($invoice_link);
 			$dns2d			= new DNS2D();
 			//$qr64 			= 'data:image/png;base64,' . DNS2D::getBarcodePNG($invoice_link, 'QRCODE');
-			$qr64 			= 'data:image/png;base64,' . $dns2d->getBarcodePNG($invoice_link, 'QRCODE');
+			$qr64 			= 'data:image/png;base64,' . $dns2d->getBarcodePNG($invoice_link, 'QRCODE', 4, 4);
 			$customer 		= $invoice->getCustomer();
 			$view 			= view($view_file, get_defined_vars());
 			$html 			= $view->render();

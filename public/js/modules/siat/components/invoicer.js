@@ -1103,15 +1103,27 @@
 				// 	this.metodos_pago[i].descripcion='';
 				// } 
 			},
-			imprimirPDF() {
-                var pdfURL = '/pdfs/factura.pdf';
-                var iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
+			imprimirPDF(url) {
+                var pdfURL = url || '/pdfs/factura.pdf';
+                var iframe = document.getElementById('print_iframe');
+                if (!iframe) {
+                    iframe = document.createElement('iframe');
+                    iframe.id = 'print_iframe';
+                    iframe.style.position = 'fixed';
+                    iframe.style.bottom = '0';
+                    iframe.style.right = '0';
+                    iframe.style.width = '0';
+                    iframe.style.height = '0';
+                    iframe.style.border = 'none';
+                    document.body.appendChild(iframe);
+                }
                 iframe.src = pdfURL;
-                document.body.appendChild(iframe);
 
                 iframe.onload = function() {
-                    iframe.contentWindow.print();
+                    setTimeout(function() {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+                    }, 1000);
                 };
             },
 			buscaRapido(buscar) {
@@ -1792,44 +1804,26 @@
 				    
 				    this.selectedMetodoPago(this.metodos_pago[7]);
 
-					// para imprimir por el protocolo y comandas
-					console.log('datos facturacion:', res.data);
-					//esto deberia abrir y autocerra la pestaña del navegador
-					window.open("print://" + res.data, '_self').close() 
-					this.invoice.codigo_metodo_pago=1;
-					
-					if( res.data && res.data.id )
-					{
-						/*
-						//this.openModal(this.modalImprimir);
-						this.generatedInvoice = res.data;
-						//this.generatedInvoice.print_url;
-						//1=imprimir;2=ver
-						//this.metodos_pago=[];
-						
-						this.invoice.codigo_metodo_pago=1;
-						const url = this.generatedInvoice.print_url + '?tpl=rollo&opcion=1';
-						
-						axios.get(url)
-						.then(function(response){
-							console.log(response);
-						})
-						.catch(function(error){
-							console.log(error);
-						});
-						// window.open(url, "_blank");
-
-						setTimeout(()=>{
-							this.imprimirPDF();
-						},4000);
-						// window.location.href = url;
-						*/
-					}
+				    if( res.id )
+				    {
+				    	const url = `/siat/facturas/${res.id}/view?tpl=ticket-small&opcion=1`;
+				    	this.imprimirPDF(url);
+				    }
 					else
 					{
 						this.$root.$toast.ShowSuccess('La factura fue generada correctamente');
-
 					}
+
+				    // para imprimir por el protocolo y comandas
+				    console.log('datos facturacion:', res.data);
+				    // Usar un iframe oculto para el protocolo para evitar interferir con la ventana principal
+				    var protocolIframe = document.createElement('iframe');
+				    protocolIframe.style.display = 'none';
+				    protocolIframe.src = "print://" + res.data;
+				    document.body.appendChild(protocolIframe);
+				    setTimeout(() => { if (protocolIframe.parentNode) document.body.removeChild(protocolIframe); }, 2000);
+				    
+				    this.invoice.codigo_metodo_pago=1;
 					this.activeEvent = null;
 					await this.checkActiveEvent(this.invoice.codigo_sucursal, this.invoice.punto_venta);
 					this.$root.$processing.hide();
